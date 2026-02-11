@@ -4,18 +4,18 @@
  * @param {string} repo
  * @param {string} ref - branch / tag / commit sha
  * @param {string} path - 仓库内路径，空表示根目录
- * @returns {Promise<Array<{ path: string, name: string, size: number, type: string }>>}
+ * @returns {Promise<{ data: Array<{ path: string, name: string, size: number, type: string }>, commitSha?: string }>}
  */
 export default async function getMetaData(owner, repo, ref, path) {
   const headers = { Accept: 'application/vnd.github.v3+json' };
   const token = gopeed.settings.token;
   if (token) headers.Authorization = `Bearer ${token}`;
 
-  // 根目录用 Tree API，避免 Contents API 根路径返回异常
   if (!path) {
     return await getMetaDataViaTree(owner, repo, ref, headers);
   }
-  return await getMetaDataViaContents(owner, repo, ref, path, headers);
+  const data = await getMetaDataViaContents(owner, repo, ref, path, headers);
+  return { data, commitSha: undefined };
 }
 
 /**
@@ -31,6 +31,7 @@ async function getMetaDataViaTree(owner, repo, ref, headers) {
   }
   const commitData = await commitResp.json();
   const treeSha = commitData.commit?.tree?.sha;
+  const commitSha = commitData.sha; // 用于 LFS Batch 的 ref（部分服务端按 commit 解析）
   if (!treeSha) throw new Error('No tree sha in commit response');
 
   const treeUrl = `https://api.github.com/repos/${owner}/${repo}/git/trees/${treeSha}?recursive=1`;
@@ -42,10 +43,9 @@ async function getMetaDataViaTree(owner, repo, ref, headers) {
   }
   const treeData = await treeResp.json();
   const tree = treeData.tree;
-  if (!Array.isArray(tree)) return [];
+  if (!Array.isArray(tree)) return { data: [], commitSha };
 
-  // 只保留文件（blob），不要目录（tree）
-  return tree
+  const data = tree
     .filter((item) => item.type === 'blob')
     .map((item) => ({
       path: item.path,
@@ -53,6 +53,7 @@ async function getMetaDataViaTree(owner, repo, ref, headers) {
       size: item.size || 0,
       type: 'blob',
     }));
+  return { data, commitSha };
 }
 
 /**

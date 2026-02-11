@@ -4,14 +4,15 @@
 
 GoPeed extension for downloading GitHub repositories: parse repo directories and batch-download files. Suited for large datasets and experiment data.
 
-I built this because cloning a multi-GB dataset repo with `git clone` was too slow. With this extension, GoPeed parses the directory and downloads files with multiple concurrent tasks—more stable than a full clone and with better resume support. This extension was created by AI by adapting [gopeed-extension-huggingface](https://github.com/DSYZayn/gopeed-extension-huggingface); the structure is the same, with the parsing target switched from Hugging Face to the GitHub API.
+I built this because cloning a multi-GB dataset repo with `git clone` was too slow. With this extension, GoPeed parses the directory and downloads files with multiple concurrent tasks—more stable than a full clone and with better resume support. This extension was created by adapting [gopeed-extension-huggingface](https://github.com/DSYZayn/gopeed-extension-huggingface); the structure is the same, with the parsing target switched from Hugging Face to the GitHub API and supporting the git lfs.
 
 ## Features
 
 - **Repo root** and **subdirectories** under a branch/tag
 - **Single file** (blob URL) download
+- **Git LFS**: automatically detects LFS pointer files and resolves them to real object download URLs (compatible with GitHub Batch API; public repos can pull LFS without a token)
 - Root dir uses Git Tree API (one call for full tree); subdirs use Contents API recursively
-- Optional **GitHub Token**: higher API rate limit (5000/hr) and access to private repos
+- Optional **GitHub Token**: higher API rate limit (5000/hr), access to private repos and private LFS
 
 ## Install
 
@@ -80,6 +81,9 @@ Without a token, unauthenticated requests are limited to about **60 per hour per
 3. Download single file `README.md`:  
    `https://github.com/wmt-conference/wmt25-terminology/blob/main/README.md`
 
+4. Repo with **Git LFS** (resolved to real file downloads):  
+   `https://github.com/Zhangyanshen/lfs-test/tree/master`
+
 ---
 
 ## Development
@@ -97,7 +101,7 @@ npm run build # production build
 
 ## Notes
 
-- Files over 100MB using Git LFS are treated as normal files; you may get LFS pointer files instead of content. LFS support may be added later.
+- **Git LFS**: the extension detects LFS pointers and uses GitHub’s LFS Batch API to get real download URLs (OID format is handled for GitHub). Public repo LFS works without a token; private LFS needs a token. If an LFS object is missing on the server (e.g. only the pointer was committed), the file is labeled **“LFS: 对象不存在(将下到指针文件)”** and the task name gets **“(含 LFS 未解析)”**.
 - Only `github.com` and `www.github.com` URLs are supported.
 
 ### Troubleshooting “only one file (main)” or “API rate limit”
@@ -109,6 +113,6 @@ npm run build # production build
 
 ---
 
-## License
+## Star History
 
-ISC
+[![Star History Chart](https://api.star-history.com/svg?repos=holyguacamoleCoder/gopeed-extension-github&type=date&legend=top-left)](https://www.star-history.com/#holyguacamoleCoder/gopeed-extension-github&type=date&legend=top-left)

@@ -4,14 +4,15 @@
 
 GoPeed 的 GitHub 仓库下载扩展，支持解析仓库目录并批量下载文件，适合下载大实验数据、数据集等。
 
-本人就是因为想直接 `git clone` 一个 GB 级别的数据集仓库太慢，才做了这个扩展：用 GoPeed 按目录解析、多任务并发下载，比整仓 clone 更稳、也更容易断点续传。本扩展由 AI 在 [gopeed-extension-huggingface](https://github.com/DSYZayn/gopeed-extension-huggingface) 的基础上改出，结构类似，只是把解析目标从 Hugging Face 换成了 GitHub API。
+本人就是因为想直接 `git clone` 一个 GB 级别的数据集仓库太慢，才做了这个扩展：用 GoPeed 按目录解析、多任务并发下载，比整仓 clone 更稳、也更容易断点续传。本扩展在 [gopeed-extension-huggingface](https://github.com/DSYZayn/gopeed-extension-huggingface) 的基础上改出，结构类似，把解析目标从 Hugging Face 换成了 GitHub API，并支持了对git lfs的解析。
 
 ## 功能
 
 - 支持 **仓库根目录**、**指定分支/标签下的子目录** 解析
 - 支持 **单文件**（blob 链接）直接下载
+- **Git LFS**：自动识别 LFS 指针文件并解析为真实大文件下载地址（已适配 GitHub Batch API，公开仓库无需 Token 即可拉取 LFS）
 - 根目录使用 Git Tree API 一次获取整棵文件树，子目录使用 Contents API 递归
-- 可选配置 **GitHub Token**：提高 API 限流（5000 次/小时）、访问私有仓库
+- 可选配置 **GitHub Token**：提高 API 限流（5000 次/小时）、访问私有仓库及私有 LFS
 
 ## 安装
 
@@ -82,6 +83,9 @@ https://github.com/DSYZayn/gopeed-extension-github
 3. 下载单文件 `README.md`：  
    `https://github.com/wmt-conference/wmt25-terminology/blob/main/README.md`
 
+4. 含 **Git LFS** 的仓库（会解析为真实大文件下载）：  
+   `https://github.com/Zhangyanshen/lfs-test/tree/master`
+
 ---
 
 ## 开发
@@ -99,7 +103,7 @@ npm run build # 生产构建
 
 ## 说明
 
-- 大文件（>100MB）若使用 Git LFS，当前版本按普通文件处理，可能得到 LFS 指针文件而非真实内容；后续可扩展 LFS 支持。
+- **Git LFS**：扩展会对每个文件请求前 512 字节，若以 `version https://git-lfs.github.com/spec/v1` 开头则视为 LFS 指针，并用 GitHub LFS Batch API 换取真实下载地址（OID 格式已按 GitHub 要求处理）。公开仓库的 LFS 无需 Token 即可下载；私有仓库 LFS 需配置 Token。若某 LFS 对象在服务器上不存在（例如仓库只提交了指针未 push 大文件），会在文件列表中打标签**「LFS: 对象不存在(将下到指针文件)」**，任务名会带**「(含 LFS 未解析)」**。
 - 扩展仅支持 `github.com`、`www.github.com` 的仓库链接。
 
 ### 排查「只看到一个 main」或「API 限流」
@@ -111,6 +115,6 @@ npm run build # 生产构建
 
 ---
 
-## License
+## Star趋势
 
-ISC
+[![Star History Chart](https://api.star-history.com/svg?repos=holyguacamoleCoder/gopeed-extension-github&type=date&legend=top-left)](https://www.star-history.com/#holyguacamoleCoder/gopeed-extension-github&type=date&legend=top-left)
