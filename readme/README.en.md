@@ -19,7 +19,7 @@ I built this because cloning a multi-GB dataset repo with `git clone` was too sl
 On the GoPeed extensions page, enter this repo’s clone URL, e.g.:
 
 ```
-https://github.com/DSYZayn/gopeed-extension-github
+https://github.com/holyguacamoleCoder/gopeed-extension-github
 ```
 
 Or use developer mode: click the install button 5 times, then select the local project directory.

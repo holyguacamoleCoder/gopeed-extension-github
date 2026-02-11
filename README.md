@@ -19,7 +19,7 @@ GoPeed 的 GitHub 仓库下载扩展，支持解析仓库目录并批量下载�
 在 GoPeed 扩展页输入本仓库的 clone 地址安装，例如：
 
 ```
-https://github.com/DSYZayn/gopeed-extension-github
+https://github.com/holyguacamoleCoder/gopeed-extension-github
 ```
 
 或使用开发者模式：扩展页连续点击安装按钮 5 次，选择本地项目目录，如图。
