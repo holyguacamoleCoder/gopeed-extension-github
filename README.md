@@ -2,9 +2,9 @@
 
 [简体中文](README.md) | [English](readme/README.en.md)
 
-GoPeed 的 GitHub 仓库下载扩展，支持解析仓库目录并批量下载文件，适合下载大实验数据、数据集等。
+Gopeed 的 GitHub 仓库下载扩展，支持解析仓库目录并批量下载文件，适合下载大实验数据、数据集等。
 
-本人就是因为想直接 `git clone` 一个 GB 级别的数据集仓库太慢，才做了这个扩展：用 GoPeed 按目录解析、多任务并发下载，比整仓 clone 更稳、也更容易断点续传。本扩展在 [gopeed-extension-huggingface](https://github.com/DSYZayn/gopeed-extension-huggingface) 的基础上改出，结构类似，把解析目标从 Hugging Face 换成了 GitHub API，并支持了对git lfs的解析。
+本人就是因为想直接 `git clone` 一个 GB 级别的数据集仓库太慢，才做了这个扩展：用 Gopeed 按目录解析、多任务并发下载，比整仓 clone 更稳、也更容易断点续传。本扩展在 [gopeed-extension-huggingface](https://github.com/DSYZayn/gopeed-extension-huggingface) 的基础上改出，结构类似，把解析目标从 Hugging Face 换成了 GitHub API，并支持了对git lfs的解析。
 
 ## 功能
 
@@ -16,7 +16,7 @@ GoPeed 的 GitHub 仓库下载扩展，支持解析仓库目录并批量下载�
 
 ## 安装
 
-在 GoPeed 扩展页输入本仓库的 clone 地址安装，例如：
+在 Gopeed 扩展页输入本仓库的 clone 地址安装，例如：
 
 ```
 https://github.com/holyguacamoleCoder/gopeed-extension-github
@@ -66,9 +66,9 @@ https://github.com/holyguacamoleCoder/gopeed-extension-github
 
 1. 打开 [GitHub → Settings → Developer settings → Personal access tokens](https://github.com/settings/tokens)（或直接访问 <https://github.com/settings/tokens>）。
 2. 点击 **Generate new token** → 选择 **Generate new token (classic)**。
-3. 填写 Note（如 `GoPeed 扩展`），勾选权限 **repo**（访问仓库内容）；若只下公开仓库可只勾选 **public_repo**。
+3. 填写 Note（如 `Gopeed 扩展`），勾选权限 **repo**（访问仓库内容）；若只下公开仓库可只勾选 **public_repo**。
 4. 生成后**复制** token（只显示一次，请妥善保存）。
-5. 在 GoPeed 中打开 **扩展** → 找到「GitHub 仓库下载」→ **设置** → 在 **GitHub Token** 一栏粘贴并保存。
+5. 在 Gopeed 中打开 **扩展** → 找到「GitHub 仓库下载」→ **设置** → 在 **GitHub Token** 一栏粘贴并保存。
 
 ---
 
@@ -95,7 +95,7 @@ https://github.com/holyguacamoleCoder/gopeed-extension-github
 
 ```bash
 npm install
-npm run dev   # 监听构建，配合 GoPeed 开发者模式调试
+npm run dev   # 监听构建，配合 Gopeed 开发者模式调试
 npm run build # 生产构建
 ```
 

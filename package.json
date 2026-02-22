@@ -1,6 +1,6 @@
 {
   "name": "gopeed-extension-github",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "private": false,
   "description": "GoPeed extension for downloading GitHub repository files and folders",
   "main": "index.js",

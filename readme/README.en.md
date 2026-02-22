@@ -2,9 +2,9 @@
 
 [简体中文](../README.md) | [English](README.en.md)
 
-GoPeed extension for downloading GitHub repositories: parse repo directories and batch-download files. Suited for large datasets and experiment data.
+Gopeed extension for downloading GitHub repositories: parse repo directories and batch-download files. Suited for large datasets and experiment data.
 
-I built this because cloning a multi-GB dataset repo with `git clone` was too slow. With this extension, GoPeed parses the directory and downloads files with multiple concurrent tasks—more stable than a full clone and with better resume support. This extension was created by adapting [gopeed-extension-huggingface](https://github.com/DSYZayn/gopeed-extension-huggingface); the structure is the same, with the parsing target switched from Hugging Face to the GitHub API and supporting the git lfs.
+I built this because cloning a multi-GB dataset repo with `git clone` was too slow. With this extension, Gopeed parses the directory and downloads files with multiple concurrent tasks—more stable than a full clone and with better resume support. This extension was created by adapting [gopeed-extension-huggingface](https://github.com/DSYZayn/gopeed-extension-huggingface); the structure is the same, with the parsing target switched from Hugging Face to the GitHub API and supporting the git lfs.
 
 ## Features
 
@@ -16,7 +16,7 @@ I built this because cloning a multi-GB dataset repo with `git clone` was too sl
 
 ## Install
 
-On the GoPeed extensions page, enter this repo’s clone URL, e.g.:
+On the Gopeed extensions page, enter this repo’s clone URL, e.g.:
 
 ```
 https://github.com/holyguacamoleCoder/gopeed-extension-github
@@ -50,7 +50,7 @@ When you open a repo in the browser, the address bar often does **not** show `tr
 - What you see: `https://github.com/wmt-conference/wmt25-terminology`
 - What this extension needs: `https://github.com/wmt-conference/wmt25-terminology/tree/main`
 
-**Manually append `/tree/main`** (or `/tree/your-branch`) to the repo URL so the extension can parse it as a directory and list all files. If you only paste `https://github.com/owner/repo`, behavior may differ; it’s best to **always include `/tree/main`** when pasting into GoPeed.
+**Manually append `/tree/main`** (or `/tree/your-branch`) to the repo URL so the extension can parse it as a directory and list all files. If you only paste `https://github.com/owner/repo`, behavior may differ; it’s best to **always include `/tree/main`** when pasting into Gopeed.
 
 For a single file, use a URL with **`blob/<branch>/path`** (the URL when you open a file on GitHub).
 
@@ -64,9 +64,9 @@ Without a token, unauthenticated requests are limited to about **60 per hour per
 
 1. Open [GitHub → Settings → Developer settings → Personal access tokens](https://github.com/settings/tokens) (or go to <https://github.com/settings/tokens>).
 2. Click **Generate new token** → **Generate new token (classic)**.
-3. Set a note (e.g. `GoPeed extension`), check **repo** (or **public_repo** if you only need public repos).
+3. Set a note (e.g. `Gopeed extension`), check **repo** (or **public_repo** if you only need public repos).
 4. Generate and **copy** the token (shown once; store it safely).
-5. In GoPeed: **Extensions** → find “GitHub 仓库下载” → **Settings** → paste the token in **GitHub Token** and save.
+5. In Gopeed: **Extensions** → find “GitHub 仓库下载” → **Settings** → paste the token in **GitHub Token** and save.
 
 ---
 
@@ -93,7 +93,7 @@ Without a token, unauthenticated requests are limited to about **60 per hour per
 
 ```bash
 npm install
-npm run dev   # watch build; use with GoPeed developer mode
+npm run dev   # watch build; use with Gopeed developer mode
 npm run build # production build
 ```
 

@@ -5,7 +5,7 @@
   "title": "GitHub 仓库下载",
   "description": "支持 GitHub 仓库目录解析与批量下载，适合下载大实验数据。可配置 Token 提高限流与私有仓库访问。",
   "icon": "./assets/icon.png",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "homepage": "https://github.com/holyguacamoleCoder/gopeed-extension-github",
   "repository": {
     "url": "https://github.com/holyguacamoleCoder/gopeed-extension-github"
