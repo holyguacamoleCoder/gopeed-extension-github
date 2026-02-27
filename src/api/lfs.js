@@ -5,6 +5,8 @@
 const LFS_VERSION_PREFIX = 'version https://git-lfs.github.com/spec/v1';
 const CONCURRENCY = 6;
 const RANGE_SIZE = 512;
+/** LFS 指针文件通常不足 200 字节，只对可能是指针的小文件发 Range 检测，避免大仓库请求过多导致超时 */
+const POINTER_MAX_SIZE = 256;
 
 /**
  * 解析 LFS 指针内容，提取 oid 和 size
@@ -218,7 +220,21 @@ export async function resolveLfsUrls(data, owner, repo, ref, token, commitSha) {
   const empty = { resolved: new Map(), unresolved: new Set() };
   if (!data || data.length === 0) return empty;
 
-  const pathToLfs = await detectLfsPointers(data, owner, repo, ref, token);
+  const likelyPointers = data.filter(
+    (item) => typeof item.size === 'number' && item.size > 0 && item.size <= POINTER_MAX_SIZE
+  );
+  if (likelyPointers.length === 0) return empty;
+  if (likelyPointers.length < data.length) {
+    gopeed.logger.debug(
+      '[LFS] Skip Range check for',
+      data.length - likelyPointers.length,
+      'files (size >',
+      POINTER_MAX_SIZE,
+      ')'
+    );
+  }
+
+  const pathToLfs = await detectLfsPointers(likelyPointers, owner, repo, ref, token);
   if (pathToLfs.size === 0) return empty;
 
   const objects = Array.from(pathToLfs.values());
