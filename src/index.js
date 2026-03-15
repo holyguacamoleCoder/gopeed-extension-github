@@ -80,7 +80,7 @@ async function buildSingleFile(owner, repo, ref, repoPath, token) {
       const pointer = parseLfsPointer(text);
       if (pointer) {
         const oidMap = await fetchLfsBatch(owner, repo, ref, [pointer], token);
-        const action = oidMap.get(pointer.oid);
+        const action = oidMap.get(pointer.oid) || oidMap.get(pointer.oid.startsWith('sha256:') ? pointer.oid.slice(7) : pointer.oid);
         if (action) {
           url = action.href;
           extra = action.header
