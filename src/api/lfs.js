@@ -103,8 +103,6 @@ export async function fetchLfsBatch(owner, repo, ref, objects, token, commitSha)
     });
   };
 
-  const has404 = (data) => Array.isArray(data?.objects) && data.objects.some((o) => o.error && o.error.code === 404);
-
   gopeed.logger.debug('[LFS] Batch request:', lfsUrl, 'objects:', objects.length);
 
   // 认证方式顺序：先无认证（公开仓库），再 Bearer，再两种 Basic
@@ -123,18 +121,14 @@ export async function fetchLfsBatch(owner, repo, ref, objects, token, commitSha)
   // 先试无 ref，再试 commit SHA，再试 refs/heads/xxx
   const refOptions = [null, ...refsToTry];
 
-  for (const auth of authVariants) {
+  outer: for (const auth of authVariants) {
     for (const refName of refOptions) {
       resp = await tryRequest(auth, refName);
-      if (!resp.ok) continue;
+      if (!resp.ok) continue; // 401/403 等才换 ref 或认证重试
       const parsed = await resp.json();
-      if (!has404(parsed)) {
-        data = parsed;
-        break;
-      }
       data = parsed;
+      break outer; // 200 即得到有效响应（含 404 表示对象不存在），不再重试
     }
-    if (data && !has404(data)) break;
   }
 
   if (!resp || !resp.ok) {
