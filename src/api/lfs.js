@@ -206,12 +206,13 @@ async function detectLfsPointers(data, owner, repo, ref, token) {
  * @param {string} repo
  * @param {string} ref
  * @param {string} [token]
- * @returns {Promise<{ resolved: Map<string, { href: string, header?: Record<string, string> }>, unresolved: Set<string> }>}
+ * @returns {Promise<{ resolved: Map<string, { href: string, header?: Record<string, string> }>, unresolved: Set<string>, realSizes: Map<string, number> }>}
  *   resolved: 成功拿到真实下载地址的 path -> { href, header }
  *   unresolved: 检测到是 LFS 指针但服务器返回错误（如 404 对象不存在）的 path 集合，用于在列表中提醒用户
+ *   realSizes: LFS 指针解析出的 path -> 真实文件大小（用于列表展示，替代 Tree API 的指针文件大小）
  */
 export async function resolveLfsUrls(data, owner, repo, ref, token, commitSha) {
-  const empty = { resolved: new Map(), unresolved: new Set() };
+  const empty = { resolved: new Map(), unresolved: new Set(), realSizes: new Map() };
   if (!data || data.length === 0) return empty;
 
   const likelyPointers = data.filter(
@@ -236,11 +237,13 @@ export async function resolveLfsUrls(data, owner, repo, ref, token, commitSha) {
 
   const resolved = new Map();
   const unresolved = new Set();
-  for (const [path, { oid }] of pathToLfs) {
+  const realSizes = new Map();
+  for (const [path, { oid, size }] of pathToLfs) {
+    realSizes.set(path, size);
     const action = oidToAction.get(oid) || oidToAction.get(oid.startsWith('sha256:') ? oid.slice(7) : oid);
     if (action) resolved.set(path, action);
     else unresolved.add(path);
   }
   gopeed.logger.debug('[LFS] Resolved', resolved.size, 'unresolved', unresolved.size);
-  return { resolved, unresolved };
+  return { resolved, unresolved, realSizes };
 }

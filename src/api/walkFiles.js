@@ -5,7 +5,7 @@
  * @param {string} repo
  * @param {string} ref
  * @param {string} basePath - 当前解析的目录路径，用于计算保存路径
- * @param {{ resolved: Map<string, { href: string, header?: Record<string, string> }>, unresolved: Set<string> }} [lfs] - LFS 已解析与未解析路径
+ * @param {{ resolved: Map<string, { href: string, header?: Record<string, string> }>, unresolved: Set<string>, realSizes?: Map<string, number> }} [lfs] - LFS 已解析与未解析路径；realSizes 为 LFS 真实文件大小，用于列表展示
  * @returns {import('@gopeed/types').FileInfo[]}
  */
 export default function walkFiles(data, owner, repo, ref, basePath, lfs) {
@@ -32,7 +32,7 @@ export default function walkFiles(data, owner, repo, ref, basePath, lfs) {
     return {
       name: item.name,
       path: savePath,
-      size: item.size,
+      size: lfs?.realSizes?.get(item.path) ?? item.size,
       ...(Object.keys(labels).length > 0 && { labels }),
       req: {
         url,
