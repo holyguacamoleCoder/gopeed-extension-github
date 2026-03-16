@@ -36,6 +36,8 @@ export default function prepare(url) {
     ref = pathParts[3];
     path = '';
     isSingleFile = false;
+  } else if (pathParts.length >= 3 && pathParts[2] !== '') {
+    return null; // 非 tree/blob，如 issues、releases、commits 等，不解析为下载
   }
   // 否则: /owner/repo 或 /owner/repo/ -> ref=main, path=''
 
