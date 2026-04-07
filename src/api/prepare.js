@@ -1,16 +1,18 @@
+import { normalizeGithubPathSegments } from '../utils/normalizeGithubPathname.js';
+
 /**
  * 解析 GitHub 页面 URL，提取 owner、repo、ref、path
  * 支持:
  *   - /owner/repo
  *   - /owner/repo/tree/ref
- *   - /owner/repo/tree/ref/path/to/dir
+ *   - /owner/repo/tree/ref/path/to/dir（含 ref 含 / 时由 index 调用 API 解析）
  *   - /owner/repo/blob/ref/path/to/file
+ * pathname 经 normalizeGithubPathSegments 规范化（合并重复斜杠、去空段）。
  * @param {URL} url
- * @returns {{ owner: string, repo: string, ref: string, path: string, isSingleFile: boolean } | null}
+ * @returns {{ owner: string, repo: string, ref: string, path: string, isSingleFile: boolean, needsRefResolve?: boolean, segments?: string[] } | null}
  */
 export default function prepare(url) {
-  const pathname = url.pathname.replace(/^\/+|\/+$/g, '');
-  const pathParts = pathname ? pathname.split('/') : [];
+  const pathParts = normalizeGithubPathSegments(url.pathname);
 
   // 至少需要 owner/repo
   if (pathParts.length < 2) return null;
@@ -26,12 +28,22 @@ export default function prepare(url) {
   let isSingleFile = false;
 
   if (pathParts[2] === 'tree' && pathParts.length >= 4) {
-    ref = pathParts[3];
-    path = pathParts.slice(4).join('/');
+    const segments = pathParts.slice(3);
+    if (segments.length === 1) {
+      ref = segments[0];
+      path = '';
+    } else {
+      return { owner, repo, ref: '', path: '', isSingleFile: false, needsRefResolve: true, segments };
+    }
   } else if (pathParts[2] === 'blob' && pathParts.length >= 5) {
-    ref = pathParts[3];
-    path = pathParts.slice(4).join('/');
-    isSingleFile = true;
+    const segments = pathParts.slice(3);
+    if (segments.length === 2) {
+      ref = segments[0];
+      path = segments[1];
+      isSingleFile = true;
+    } else if (segments.length >= 3) {
+      return { owner, repo, ref: '', path: '', isSingleFile: true, needsRefResolve: true, segments };
+    }
   } else if (pathParts[2] === 'blob' && pathParts.length === 4) {
     ref = pathParts[3];
     path = '';

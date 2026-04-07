@@ -1,3 +1,7 @@
+/** User-visible LFS labels (English) */
+export const LFS_LABEL_RESOLVED = 'Yes';
+export const LFS_LABEL_UNRESOLVED = 'Object missing (LFS pointer only)';
+
 /**
  * 将 getMetaData 返回的扁平文件列表转为 GoPeed 所需的 files 格式
  * @param {Array<{ path: string, name: string, size: number }>} data
@@ -27,8 +31,8 @@ export default function walkFiles(data, owner, repo, ref, basePath, lfs) {
     const dirPath = item.path.includes('/') ? item.path.split('/').slice(0, -1).join('/') : '';
     const savePath = dirPath ? `${repo}/${dirPath}` : repo;
     const labels = {};
-    if (resolved) labels.LFS = '是';
-    else if (isUnresolvedLfs) labels.LFS = '对象不存在(将下到指针文件)';
+    if (resolved) labels.LFS = LFS_LABEL_RESOLVED;
+    else if (isUnresolvedLfs) labels.LFS = LFS_LABEL_UNRESOLVED;
     return {
       name: item.name,
       path: savePath,

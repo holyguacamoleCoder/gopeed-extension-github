@@ -1,17 +1,18 @@
 # gopeed-extension-github
 
-[简体中文](../README.md) | [English](README.en.md)
+[简体中文](../README.md) | [English](readme/README.en.md)
 
 Gopeed extension for downloading GitHub repositories: parse repo directories and batch-download files. Suited for large datasets and experiment data.
 
-I built this because cloning a multi-GB dataset repo with `git clone` was too slow. With this extension, Gopeed parses the directory and downloads files with multiple concurrent tasks—more stable than a full clone and with better resume support. This extension was created by adapting [gopeed-extension-huggingface](https://github.com/DSYZayn/gopeed-extension-huggingface); the structure is the same, with the parsing target switched from Hugging Face to the GitHub API and supporting the git lfs.
+I built this because cloning a multi-GB dataset repo with `git clone` was too slow. With this extension, Gopeed parses the directory and downloads files with multiple concurrent tasks—more stable than a full clone and with better resume support. This extension was created by adapting [gopeed-extension-huggingface](https://github.com/DSYZayn/gopeed-extension-huggingface); the structure is the same, with the parsing target switched from Hugging Face to the GitHub API and supporting Git LFS.
 
 ## Features
 
 - **Repo root** and **subdirectories** under a branch/tag
 - **Single file** (blob URL) download
-- **Git LFS**: automatically detects LFS pointer files and resolves them to real object download URLs (compatible with GitHub Batch API; public repos can pull LFS without a token)
-- Root dir uses Git Tree API (one call for full tree); subdirs use Contents API recursively
+- **Git LFS**: detects LFS pointer files and resolves them to real object download URLs (GitHub Batch API); list shows **real file sizes** from pointer metadata, not pointer file size
+- **Metadata**: both root and subdirectories use the Git **Tree API** (`commits` + `git/trees`) to build the file list, then filter by path inside the repo; if a response is **truncated**, the extension falls back to non-recursive tree fetch and walks subtrees per GitHub’s guidance
+- **Branch names with slashes** (e.g. `feature/foo`): use the full `tree/...` URL from the browser; the extension resolves `ref` vs path via the GitHub API
 - Optional **GitHub Token**: higher API rate limit (5000/hr), access to private repos and private LFS
 
 ## Install
@@ -40,8 +41,15 @@ Use a URL that matches one of the formats below to **parse and list all files** 
 
 - **owner**: GitHub username or org
 - **repo**: Repository name
-- **branch**: Branch name, e.g. `main`, `master`
+- **branch**: Branch or tag, e.g. `main`, `v1.0`. If the branch name contains slashes (e.g. `njpm/tsdb-utf8-mixed-querying`), copy the full `tree/...` URL from GitHub
 - **path**: Path inside the repo; omit for root
+
+### Unsupported pages
+
+These **cannot** be resolved as download tasks (URLs whose third path segment is not `tree` or `blob` are rejected). Use the repo home or a `tree` / `blob` link instead:
+
+- Issues, Pull requests, Discussions, Actions, Projects, Wiki, Security, Insights
+- Releases (list), Tags (list), Compare, Commits (list), etc.
 
 ### Important: URL must include `tree/<branch>`
 
@@ -53,6 +61,8 @@ When you open a repo in the browser, the address bar often does **not** show `tr
 **Manually append `/tree/main`** (or `/tree/your-branch`) to the repo URL so the extension can parse it as a directory and list all files. If you only paste `https://github.com/owner/repo`, behavior may differ; it’s best to **always include `/tree/main`** when pasting into Gopeed.
 
 For a single file, use a URL with **`blob/<branch>/path`** (the URL when you open a file on GitHub).
+
+Pathnames are normalized (duplicate slashes collapsed, empty segments dropped), so `.../tree/main` and `.../tree/main/` are usually equivalent.
 
 ---
 
@@ -86,6 +96,14 @@ Without a token, unauthenticated requests are limited to about **60 per hour per
 
 ---
 
+### Notes (many files / resolve timeout)
+
+- Repositories with **a very large number of files** may need to fetch **the full tree metadata** in one (or several) API calls; the HTTP response can be **large and slow**.
+- **Gopeed may enforce a total timeout** for extension resolve. You might see **timeout or failure in the UI** while **logs show the HTTP response arriving slightly later**—the host gave up before the request finished. **Retry with a deeper subdirectory URL** (`tree/<branch>/<subpath>`) to reduce work.
+- Prefer **`tree/<branch>/<subpath>`** over repo root when possible, and use a **token** to reduce rate-limit retries.
+
+---
+
 ## Development
 
 1. **Icon**: Put `icon.png` (e.g. 128×128) in `assets/`, or copy from `gopeed-extension-huggingface/assets/icon.png`.
@@ -101,12 +119,13 @@ npm run build # production build
 
 ## Notes
 
-- **Git LFS**: the extension detects LFS pointers and uses GitHub’s LFS Batch API to get real download URLs (OID format is handled for GitHub). Public repo LFS works without a token; private LFS needs a token. If an LFS object is missing on the server (e.g. only the pointer was committed), the file is labeled **“LFS: 对象不存在(将下到指针文件)”** and the task name gets **“(含 LFS 未解析)”**.
+- **Git LFS**: the extension detects LFS pointers and uses GitHub’s LFS Batch API to get real download URLs. Public repo LFS works without a token; private LFS needs a token. If an LFS object is missing on the server (e.g. only the pointer was committed), the file is labeled **LFS: Object missing (LFS pointer only)** and the task name may include **(LFS unresolved)**.
 - Only `github.com` and `www.github.com` URLs are supported.
+- User-visible errors and LFS labels are in **English**.
 
 ### Troubleshooting “only one file (main)” or “API rate limit”
 
-1. **Confirm this extension is handling the URL**: After parsing, the task name should be **“GitHub: repo-name”**. If it shows “Error: API 限流，请在扩展设置中配置 GitHub Token”, you hit the rate limit—configure a token as above.
+1. **Confirm this extension is handling the URL**: After parsing, the task name should be **“GitHub: repo-name”**. If it starts with **Error: API rate limit exceeded**, configure a token as above.
 2. **Ensure the URL has `tree/<branch>`**: Root or subdir URLs must include `tree/main` (or the branch name).
 3. **Check extension log**: In GoPeed’s install directory, open `logs/extension.log` for `[GitHub 扩展] 收到 URL:` and `[GitHub Parser]` messages.
 4. **Disable other GitHub extensions**: If another extension also matches `*://github.com/*`, it may run first; disable others and try again.
