@@ -127,56 +127,8 @@ Enable **启用下载代理** in extension settings and set **代理前缀** to 
 
 ### Notes (many files / resolve timeout)
 
-- Repositories with **a very large number of files** may need to fetch **the full tree metadata** in one (or several) API calls; the HTTP response can be **large and slow**.
-- **Gopeed may enforce a total timeout** for extension resolve. You might see **timeout or failure in the UI** while **logs show the HTTP response arriving slightly later**—the host gave up before the request finished. **Retry with a deeper subdirectory URL** (`tree/<branch>/<subpath>`) to reduce work.
-- Prefer **`tree/<branch>/<subpath>`** over repo root when possible, and use a **token** to reduce rate-limit retries.
-
----
-
-## Development
-
-### Why `npm run build` does not change behavior
-
-Gopeed does **not** read your local workspace build unless one of these applies:
-
-| Install method | Script Gopeed actually runs |
-| -------------- | --------------------------- |
-| **GitHub repo URL** on the extensions page | Committed `dist/index.js` in the repo (an uncommitted local build is **ignored**) |
-| **Developer mode** + local folder | `dist/index.js` under the selected folder (restart Gopeed after `npm run build`) |
-
-If `extension.log` shows only `收到 URL` and **not** `===== github-ext-v1.2.3 =====`, you are still on the **legacy dist** (no `/releases/...` support; UI may show a single bogus `v1.6.2` file).
-
-### Local debugging
-
-1. **Uninstall** the extension if it was installed from the GitHub URL
-2. Click **Install** five times to enter developer mode
-3. Select this repo’s **root directory** (folder containing `manifest.json`)
-4. Run `npm run build`
-5. **Quit Gopeed completely** and reopen
-6. Extension **version** in the list should be **1.2.3**
-7. After pasting a Release URL, `logs/extension.log` should contain:
-   ```
-   ===== github-ext-v1.2.3 manifest=1.2.3 =====
-   解析类型: releases owner=GopeedLab repo=gopeed tag=v1.6.2
-   ```
-
-For URL-based installs, **commit and push** `dist/index.js` so remote installs get the update.
-
-```bash
-npm install
-npm run build   # production
-npm run dev     # watch + developer mode
-```
-
----
-
-## v1.2.3 highlights
-
-- **Releases / Archive / Gist / raw** URL parsing and batch download
-- Optional **download proxy** (final URLs only; GitHub API is never proxied)
-- Releases: HTML page fallback when `api.github.com` is slow or unreachable
-- Clear errors on resolve failure (avoids silent fallback to the URL’s last path segment)
-- Bare `owner/repo` URLs default to the `main` branch tree
+- Very large repositories may need to fetch the full file tree metadata; parsing can be slow or hit Gopeed’s resolve timeout.
+- Prefer `tree/<branch>/<subpath>` over the repo root when possible, and use a **token** to reduce rate-limit failures.
 
 ---
 
@@ -185,15 +137,7 @@ npm run dev     # watch + developer mode
 - **Git LFS**: the extension detects LFS pointers and uses GitHub’s LFS Batch API to get real download URLs. Public repo LFS works without a token; private LFS needs a token. If an LFS object is missing on the server (e.g. only the pointer was committed), the file is labeled **LFS: Object missing (LFS pointer only)** and the task name may include **(LFS unresolved)**. LFS downloads through a proxy may fail; disable the proxy and retry.
 - Supports `github.com`, `raw.githubusercontent.com`, `gist.github.com`, and `gist.githubusercontent.com`.
 - User-visible errors and LFS labels are in **English**.
-
-### Troubleshooting “only one file `v1.6.2`” or API rate limit
-
-If a Release URL shows **one file named `v1.6.2` with unknown size**, Gopeed fell back to plain HTTP download (last URL segment as filename), not this extension’s Release parser.
-
-1. **Confirm the new build is loaded**: `extension.log` must contain **`===== github-ext-v1.2.3 manifest=1.2.3 =====`**. If you only see `收到 URL`, see **Development** above.
-2. **Confirm success**: Task name should start with **`github-ext-v1.2.3:`** and list multiple assets (e.g. `Gopeed-v1.6.2-windows-amd64.zip`). An **Error:** dialog means the extension ran; fix token or network per the message.
-3. **Use a Release URL**: `https://github.com/<owner>/<repo>/releases/tag/<tag>`
-4. **Disable other GitHub extensions** if multiple handlers match the same URL.
+- **API rate limit**: if parsing fails with **API rate limit exceeded**, configure a GitHub token as above and retry.
 
 ---
 

@@ -129,56 +129,8 @@ https://github.com/holyguacamoleCoder/gopeed-extension-github
 
 ### 使用注意（文件很多 / 解析超时）
 
-- **文件数量特别多**的仓库（例如大型单体仓库）在解析阶段需要拉取 **整棵文件树** 的元数据，单次 HTTP 响应可能 **很大、很慢**。
-- **Gopeed 对扩展解析任务可能有总超时**。可能出现：**界面已提示超时或失败**，但日志里 **稍后才出现** GitHub API 的响应记录——这是宿主超时与网络耗时不同步导致的，**重试时可改用更浅的子目录链接**。
-- **建议**：尽量使用 **`tree/<分支>/<子目录路径>`** 缩小枚举范围，而不是始终在仓库根目录解析；并配置 **Token** 以降低限流与重试带来的额外耗时。
-
----
-
-## 开发
-
-### 重要：为什么 `npm run build` 后没变化？
-
-Gopeed **不会**自动读取你工作区里刚构建的文件，除非满足其一：
-
-| 安装方式 | Gopeed 实际执行的脚本 |
-| -------- | --------------------- |
-| 扩展页填写 **GitHub 仓库地址** 安装 | 使用仓库里 **已 git commit 的** `dist/index.js`（本地未提交的 build **不会**生效） |
-| **开发者模式** 选择本地目录 | 使用所选目录下的 `dist/index.js`（`npm run build` 后建议重启 Gopeed） |
-
-若 `extension.log` 里**只有** `收到 URL`、**没有** `===== github-ext-v1.2.3 =====`，说明仍在跑 **旧版 dist**（旧版不支持 `/releases/...`，界面会误显示单个 `v1.6.2`）。
-
-### 本地调试步骤
-
-1. 扩展页 **卸载** 通过 GitHub 地址安装的本扩展（若存在）
-2. 扩展页 **连续点击「安装」按钮 5 次**，进入开发者模式
-3. 选择**本项目根目录**（含 `manifest.json` 的文件夹）
-4. 终端执行：`npm run build`
-5. **完全退出 Gopeed 再重新打开**
-6. 扩展列表里 **版本号** 应为 **1.2.3**
-7. 粘贴 Release 链接后，`logs/extension.log` 应出现：
-   ```
-   ===== github-ext-v1.2.3 manifest=1.2.3 =====
-   解析类型: releases owner=GopeedLab repo=gopeed tag=v1.6.2
-   ```
-
-通过 GitHub 地址安装时，需将 `dist/index.js` **一并 commit 并 push**，远程安装才会更新。
-
-```bash
-npm install
-npm run build   # 生产构建
-npm run dev     # 监听构建，配合开发者模式
-```
-
----
-
-## v1.2.3 更新摘要
-
-- **Releases / Archive / Gist / raw** 链接解析与批量下载
-- 可选 **下载代理**（仅包装最终下载 URL，不代理 GitHub API）
-- Release：`api.github.com` 超时或不可达时，自动回退解析 **Release 页面 HTML**
-- 解析失败抛出明确错误，避免 Gopeed 静默回退成 URL 末段文件名（如 `v1.6.2`）
-- 裸 `owner/repo` 默认按 `main` 分支解析目录
+- **文件数量特别多**的仓库在解析阶段需要拉取整棵文件树的元数据，可能较慢或触发 Gopeed 解析超时。
+- **建议**：尽量使用 `tree/<分支>/<子目录路径>` 缩小范围，而不是始终在仓库根目录解析；并配置 **Token** 以降低限流带来的失败。
 
 ---
 
@@ -187,15 +139,7 @@ npm run dev     # 监听构建，配合开发者模式
 - **Git LFS**：扩展会对每个文件请求前 512 字节，若以 `version https://git-lfs.github.com/spec/v1` 开头则视为 LFS 指针，并用 GitHub LFS Batch API 换取真实下载地址。公开仓库的 LFS 无需 Token 即可下载；私有仓库 LFS 需配置 Token。若某 LFS 对象在服务器上不存在（例如仓库只提交了指针未 push 大文件），文件列表中会显示英文标签 **LFS: Object missing (LFS pointer only)**，任务名可能带 **(LFS unresolved)**。LFS 真实下载地址经代理时可能失败，可关闭代理重试。
 - 支持 `github.com`、`raw.githubusercontent.com`、`gist.github.com`、`gist.githubusercontent.com`。
 - 用户可见的错误提示与上述 LFS 标签为 **英文**（便于与 Gopeed 界面统一）。
-
-### 排查「只看到一个 `v1.6.2`」或「API 限流」
-
-**若 Release 页只出现 1 个文件、名为 `v1.6.2`、大小为「未知」**：这不是本扩展的 Release 解析结果，而是 **Gopeed 在扩展未生效时，把网页 URL 当作普通 HTTP 链接处理**（取 URL 最后一段 `v1.6.2` 当文件名）。v1.2.3 起解析失败会弹出明确错误，而不再静默变成这种假象。
-
-1. **确认扩展已加载**：`extension.log` 里必须有 **`===== github-ext-v1.2.3 manifest=1.2.3 =====`**。若只有 `收到 URL` 而没有这一行，说明仍在用旧版 dist（见上文「开发」章节）。
-2. **确认解析成功**：任务名应以 **`github-ext-v1.2.3:`** 开头；Release 应列出多个安装包（如 `Gopeed-v1.6.2-windows-amd64.zip`）。若出现 **Error:** 弹窗而不是单个 `v1.6.2`，说明扩展已生效，请按错误提示配置 Token 或检查网络。
-3. **确认链接格式**：使用 `https://github.com/<owner>/<repo>/releases/tag/<tag>`，不要用 Issues/PR 等页面地址。
-4. **禁用其他 GitHub 扩展**：多个扩展同时匹配时，最后一个会覆盖前面的结果。
+- **API 限流**：若解析失败且提示 **API rate limit exceeded**，请按上文配置 GitHub Token 后重试。
 
 ---
 
