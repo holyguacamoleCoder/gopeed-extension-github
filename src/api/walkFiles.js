@@ -1,3 +1,5 @@
+import buildDownloadReq from '../utils/buildDownloadReq.js';
+
 /** User-visible LFS labels (English) */
 export const LFS_LABEL_RESOLVED = 'Yes';
 export const LFS_LABEL_UNRESOLVED = 'Object missing (LFS pointer only)';
@@ -16,7 +18,6 @@ export default function walkFiles(data, owner, repo, ref, basePath, lfs) {
   if (!data || !Array.isArray(data)) return [];
 
   const token = gopeed.settings.token;
-  const defaultExtra = token ? { header: { Authorization: `Bearer ${token}` } } : undefined;
   const lfsResolved = lfs && lfs.resolved ? lfs.resolved : new Map();
   const lfsUnresolved = lfs && lfs.unresolved ? lfs.unresolved : new Set();
 
@@ -24,10 +25,6 @@ export default function walkFiles(data, owner, repo, ref, basePath, lfs) {
     const resolved = lfsResolved.get(item.path);
     const isUnresolvedLfs = lfsUnresolved.has(item.path);
     const url = resolved ? resolved.href : `https://raw.githubusercontent.com/${owner}/${repo}/${ref}/${item.path}`;
-    const extra =
-      resolved && resolved.header
-        ? { header: { ...(defaultExtra && defaultExtra.header), ...resolved.header } }
-        : defaultExtra;
     const dirPath = item.path.includes('/') ? item.path.split('/').slice(0, -1).join('/') : '';
     const savePath = dirPath ? `${repo}/${dirPath}` : repo;
     const labels = {};
@@ -38,10 +35,7 @@ export default function walkFiles(data, owner, repo, ref, basePath, lfs) {
       path: savePath,
       size: lfs?.realSizes?.get(item.path) ?? item.size,
       ...(Object.keys(labels).length > 0 && { labels }),
-      req: {
-        url,
-        ...(extra && { extra }),
-      },
+      req: buildDownloadReq(url, token, resolved?.header),
     };
   });
 }

@@ -12,6 +12,12 @@ export function formatResolveError(err) {
     return 'Error: Unauthorized (401). Check that your GitHub token is valid.';
   }
   if (msg.indexOf('404') !== -1) {
+    if (msg.indexOf('releases') !== -1 || msg.indexOf('Release') !== -1) {
+      return 'Error: Release or tag not found (404).';
+    }
+    if (msg.indexOf('gists') !== -1 || msg.indexOf('Gist') !== -1) {
+      return 'Error: Gist not found (404).';
+    }
     return 'Error: Repository, branch, or file not found (404), or access denied.';
   }
   if (msg.indexOf('GitHub API') !== -1) {
